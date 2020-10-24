@@ -94,6 +94,9 @@ class GWENGui(QtWidgets.QMainWindow):
 		# Display the GUI
 		self.show()
 		# System call to execute QApplication
+		if clean_up == None:
+			def clean_up():
+				pass
 		sys.exit(_delete_(clean_up))
 
 
