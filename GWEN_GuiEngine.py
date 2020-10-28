@@ -13,6 +13,8 @@
 #
 # Authors: Mundo Guzman, Kyle Kung, Cole Meyers  |   Maintainer: Kyle Kung
 #
+# https://github.com/krkung/GWEN
+#
 # Framework built to rapidly created PyQt5 GUI Applications.
 # A normal work flow begins with creating a GWENGui() object, followed by a series
 # of addWidget() function calls, and ends with a .launch() command.
@@ -33,7 +35,7 @@ except:
 ###############################################################################################
 
 # Gui Library Dependencies
-from GWENGui_Objects import *
+from GWEN_GuiObjects import *
 import sys
 
 ###########################################################################################################
@@ -41,8 +43,8 @@ def _delete_(clean_up):
 	""" Function to be called when gui exits. clean_up will run before class goes to garbage """
 	try: app.exec_()
 	finally: 
-		#if clean_up != None:
-		clean_up()
+		if clean_up != None:
+			clean_up()
 
 
 # Necessary PyQt call
@@ -94,9 +96,6 @@ class GWENGui(QtWidgets.QMainWindow):
 		# Display the GUI
 		self.show()
 		# System call to execute QApplication
-		if clean_up == None:
-			def clean_up():
-				pass
 		sys.exit(_delete_(clean_up))
 
 
@@ -354,20 +353,20 @@ class GWENGui(QtWidgets.QMainWindow):
 		
 	#################################### Available Widgets ##############################################
 
-	def addButton(self, id, callback, dim=[1,1], label=None, horizontalAlign=False, width=120):
+	def addButton(self, id, callback, dim=[1,1], label=None, horizontalAlign=False, size=[120,25]):
 		""" Adds a push button to the Gui """
 		if not label: label = id
-		self.widgets.append(GWENButton(self.centralWidget, id, callback, dim, label, width))
+		self.widgets.append(GWENButton(self.centralWidget, id, callback, dim, label, size))
 		if horizontalAlign:
 			self.labels.append(GWENLabel(self.centralWidget, ' ', dim))
 		else:
 			self.labels.append(None)
 
 
-	def addToggle(self, id, dim=[1,1], label=None, width=120):
+	def addToggle(self, id, dim=[1,1], label=None, size=[120,20]):
 		""" Adds a toggle switch to the Gui """
 		if not label: label = id
-		self.widgets.append(GWENButton(self.centralWidget, id, None, dim, label, width))
+		self.widgets.append(GWENButton(self.centralWidget, id, None, dim, label, size))
 		# Toggles don't get labels
 		self.labels.append(None)
 
@@ -410,7 +409,10 @@ class GWENGui(QtWidgets.QMainWindow):
 	def addInputBox(self, id, default=None, dim=[1,1], label=None, width=120):
 		""" Adds an input box to the Gui """
 		if not label: label = id
-		if default != None:
+		try:
+			if default != None:
+				default = str(default)
+		except:
 			default = str(default)
 		self.widgets.append(GWENUserInput(self.centralWidget, id, default, dim, label, width))
 		self.labels.append(GWENLabel(self.centralWidget, label, dim, id))
@@ -483,9 +485,9 @@ class GWENGui(QtWidgets.QMainWindow):
 		self.labels.append(None)
 
 
-	def addPlot(self, id, numCurves, labels):
+	def addPlot(self, id, numCurves, labels, color=None):
 		""" Adds a plot to the Gui """
-		self.widgets.append(GWENPlot(self.centralWidget, id, numCurves, labels)) 
+		self.widgets.append(GWENPlot(self.centralWidget, id, numCurves, labels, color)) 
 		# Plots don't get labels
 		self.labels.append(None)
 
@@ -496,6 +498,12 @@ class GWENGui(QtWidgets.QMainWindow):
 		# Plots don't get labels
 		self.labels.append(None)
 
+
+	def addMatPlot(self, id, x_len=100, y_range=[0,100], interval=20):
+		# 2. Place the matplotlib figure
+		self.widgets.append(MyFigureCanvas(self.centralWidget, id, x_len, y_range, interval))
+		# Plots don't get labels
+		self.labels.append(None)
 
 	################################### Setter Slot Functions ##########################################
 
@@ -521,6 +529,14 @@ class GWENGui(QtWidgets.QMainWindow):
 		plot = self.getWidget(id)
 		# Once found, set the Indicator 
 		plot.updatePlot(x_data,*y_data)
+
+
+	@QtCore.pyqtSlot()
+	def updateMatPlot(self, id, y_data):
+		# Searches for Gui Object given an ID
+		plot = self.getWidget(id)
+		# Once found, set the Indicator 
+		plot._update_canvas_(y_data)
 
 
 	@QtCore.pyqtSlot()

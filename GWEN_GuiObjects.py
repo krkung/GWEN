@@ -7,9 +7,11 @@
 #  Y88b  d88P 8888P   Y8888 888        888   Y8888 
 #   "Y8888P88 888P     Y888 8888888888 888    Y888 
 #                                                                 
-# GWENGui_Objects.py
+# GWEN_GuiObjects.py
 #
 # Authors: Mundo Guzman, Kyle Kung, Cole Meyers  |   Maintainer: Kyle Kung
+# 
+# https://github.com/krkung/GWEN
 #
 # Collection of PyQt5 wrapper classes that are used in GWENGui_Engine.py
 # Each PyQt widget will have its own GWENGui object class
@@ -19,6 +21,12 @@ import sys
 import os
 import numpy as np
 from PyQt5 import QtWidgets, QtCore, QtGui
+
+from matplotlib.backends.backend_qt5agg import FigureCanvas
+# from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+import matplotlib as plt
+import matplotlib.figure as fig
+import matplotlib.animation as anim
 
 ##### Operating System Check ##################################################################################
 
@@ -44,7 +52,7 @@ import pyqt_led
 
 class GWENButton(QtWidgets.QPushButton):
 	""" Class used to create a normal Qt push button """
-	def __init__(self, parent, id, callback, dim, label, width):
+	def __init__(self, parent, id, callback, dim, label, size=[200,200]):
 		# Call parent constructor
 		super().__init__(label,parent)
 
@@ -63,7 +71,8 @@ class GWENButton(QtWidgets.QPushButton):
 			self.clicked.connect(self.toggle)
 
 		# Default size
-		self.setFixedWidth(width)
+		self.setFixedWidth(size[0])
+		self.setFixedHeight(size[1])
 
 
 	def toggle(self):
@@ -375,7 +384,7 @@ class GWENImage(QtWidgets.QLabel):
 
 class GWENPlot(pg.GraphicsLayoutWidget):
 	""" Class used to create a Qt plot """
-	def __init__(self, parent, id, numCurves, labels):
+	def __init__(self, parent, id, numCurves, labels, color):
 		# Call parent constructor
 		super().__init__(parent)
 
@@ -390,9 +399,13 @@ class GWENPlot(pg.GraphicsLayoutWidget):
 		# Create plot object
 		self.axe = self.addPlot()
 
-		# Create a list to contain all curves
-		for curve in range(0,numCurves):
-			self.curves.append(self.axe.plot(pen=colors[curve]))
+		# If one curve, let the user set the color
+		if numCurves == 1 and color != None:
+			self.curves.append(self.axe.plot(pen=color))
+		else:
+			# Create a list to contain all curves
+			for curve in range(0,numCurves):
+				self.curves.append(self.axe.plot(pen=colors[curve]))
 
 		# Set title and axis labels
 		self.axe.setTitle(labels[0])
@@ -417,6 +430,53 @@ class GWENStackPlot(pg.GraphicsLayoutWidget):
 		# Call parent constructor
 		# Set dim and id
 		pass
+
+
+class MyFigureCanvas(FigureCanvas, anim.FuncAnimation):
+	'''
+	This is the FigureCanvas in which the live plot is drawn.
+
+	'''
+	def __init__(self, parent, id, x_len:int, y_range:list, interval:int) -> None:
+		'''
+		:param x_len:       The nr of data points shown in one plot.
+		:param y_range:     Range on y-axis.
+		:param interval:    Get a new datapoint every .. milliseconds.
+
+		'''
+		# Call parent constructor
+		#super().__init__(parent)
+		self.id = id
+		self.dim = [4,4]
+
+
+		FigureCanvas.__init__(self, fig.Figure())
+		# Range settings
+		self._x_len_ = x_len
+		self._y_range_ = y_range
+
+		# Store two lists _x_ and _y_
+		x = list(range(0, x_len))
+		y = [0] * x_len
+
+		# Store a figure and ax
+		self._ax_  = self.figure.subplots()
+		self._ax_.set_ylim(ymin=self._y_range_[0], ymax=self._y_range_[1])
+		self._line_, = self._ax_.plot(x, y)
+
+		# Call superclass constructors
+		anim.FuncAnimation.__init__(self, self.figure, self._update_canvas_, fargs=(y,), interval=interval, blit=True)
+		return
+
+	def _update_canvas_(self, y):
+		'''
+		This function gets called regularly by the timer.
+
+		'''
+		y.append(round(get_next_datapoint(), 2))     # Add new datapoint
+		y = y[-self._x_len_:]                        # Truncate list _y_
+		self._line_.set_ydata(y)
+		return self._line_,
 
 
 class GWENDivies():
