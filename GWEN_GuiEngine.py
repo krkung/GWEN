@@ -499,20 +499,12 @@ class GWENGui(QtWidgets.QMainWindow):
 		self.labels.append(None)
 
 
-	def addMatplotlibPlot(self, id, dim=[4,4]):
-		""" Adds a matplotlib imshow feature """
-		obj = GWENMatplotlibPlot(self.centralWidget)
-		toolbar = NavigationToolbar(obj, self)
-		# Create layout combining axes and toolbar
-		layout = QtWidgets.QVBoxLayout()
-		layout.addWidget(toolbar)
-		layout.addWidget(obj)
-		widget_obj = QtWidgets.QWidget()
-		widget_obj.dim = dim
-		widget_obj.setLayout(layout)
-		self.widgets.append(widget_obj)
-		# Plots don't get labels
-		self.labels.append(None)
+    def addMatplotlibPlot(self, id, labels, dim=[4,4]):
+        """ Adds a matplotlib imshow feature """
+        self.widgets.append(JPLMatplotlibPlot(self.centralWidget, id, labels, dim))
+        # Plots don't get labels
+        self.labels.append(None)
+
 
 	################################### Setter Slot Functions ##########################################
 

@@ -432,88 +432,104 @@ class GWENStackPlot(pg.GraphicsLayoutWidget):
 		# Set dim and id
 		pass
 
-class GWENMatplotlibPlot(FigureCanvasQTAgg):
-	""" Class to generate and update a matplotlib plot within a GUI """
-	def __init__(self, id, labels, parent=None, width=5, height=5, dpi=90):
-		self.fig = plt.figure(figsize=(width, height), dpi=dpi)
-		self.axes = self.fig.add_subplot(111)
-		super().__init__(self.fig)
-		self.id = id
-		self.dim = [4,4]
+class GWENMatplotlibPlot(QtWidgets.QWidget):
+    """ Class to generate and update a matplotlib plot """ 
+    """ THIS IS CALLED IN GWENGui_Engine NOT GWENMatplotlibFig """
+    def __init__(self, parent, id, labels, dim):
+        super().__init__(parent)
+        self.id = id
+        self.dim = dim
+        self.matplotlibFig = self.GWENMatplotlibFig(labels)
 
-		# Initialize empty plot
-		self.im = self.axes.imshow(np.ones([640, 640]), alpha=0)
-		self.cbar = None
-		self.title = self.fig.suptitle(str(labels[0]))
-		self.xlabel = plt.xlabel(str(labels[1]))
-		self.ylabel = plt.ylabel(str(labels[2]))
-		self.setFixedSize(400, 360)
+        # Create layout combining axes and toolbar
+        toolbar = NavigationToolbar(self.matplotlibFig, parent)
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(toolbar)
+        layout.addWidget(self.matplotlibFig)
+        self.setLayout(layout)
 
-	def updatePlot(self):
-		pass
-		
-	def updatePlot_Img(self, img_array, scaling):
-		"""
-		Plot update callback.
-		@img_array: (numpy.array) image
-		@scaling: (int) pixel scaling factor
-		"""
-		self.axes.cla()
-		if self.cbar: self.cbar.remove()
-		vmin, vmax = np.nanmin(img_array), np.nanmax(img_array)
-		dims = np.shape(img_array)
-		# Display interferogram with the appropriate pixel scaling factor.
-		self.im = self.axes.imshow(img_array, extent=[0, dims[0] * scaling, 0, dims[1] * scaling])
-		self.im.set_clim(vmin, vmax)
-		self.cbar = self.fig.colorbar(self.im, ticks=np.linspace(vmin, vmax, 10), format='%.2f')
-		self.draw()
-
-""" Unfinished animation plot code """	
-# class MyFigureCanvas(FigureCanvas, anim.FuncAnimation):
-# 	'''
-# 	This is the FigureCanvas in which the live plot is drawn.
-
-# 	'''
-# 	def __init__(self, parent, id, x_len:int, y_range:list, interval:int) -> None:
-# 		'''
-# 		:param x_len:       The nr of data points shown in one plot.
-# 		:param y_range:     Range on y-axis.
-# 		:param interval:    Get a new datapoint every .. milliseconds.
-
-# 		'''
-# 		# Call parent constructor
-# 		#super().__init__(parent)
-# 		self.id = id
-# 		self.dim = [4,4]
+    def updatePlot(self, x, y):
+        self.matplotlibFig.axes.cla()
+        self.matplotlibFig.axes.plot(x, y)
+        self.matplotlibFig.draw()
 
 
-# 		FigureCanvas.__init__(self, fig.Figure())
-# 		# Range settings
-# 		self._x_len_ = x_len
-# 		self._y_range_ = y_range
+    class GWENMatplotlibFig(FigureCanvasQTAgg):
+        """ Child of JPLMatplotlibPlot. This is the plot. 
+            The parent simply adds the toolbar to the widget. """
+        def __init__(self, labels, width=5, height=5, dpi=90):
+            self.fig = plt.figure(figsize=(width, height), dpi=dpi)
+            self.axes = self.fig.add_subplot(111)
+            super().__init__(self.fig)
 
-# 		# Store two lists _x_ and _y_
-# 		x = list(range(0, x_len))
-# 		y = [0] * x_len
+            self.title = self.fig.suptitle(str(labels[0]))
+            self.xlabel = plt.xlabel(str(labels[1]))
+            self.ylabel = plt.ylabel(str(labels[2]))
+            self.setFixedSize(400, 360)
 
-# 		# Store a figure and ax
-# 		self._ax_  = self.figure.subplots()
-# 		self._ax_.set_ylim(ymin=self._y_range_[0], ymax=self._y_range_[1])
-# 		self._line_, = self._ax_.plot(x, y)
+        """ This probably needs to go outside into parent class """
+        # def updatePlot_Img(self, img_array, scaling):
+        #     """
+        #     Plot update callback.
+        #     @img_array: (numpy.array) image
+        #     @scaling: (int) pixel scaling factor
+        #     """
+        #     self.axes.cla()
+        #     if self.cbar: self.cbar.remove()
+        #     vmin, vmax = np.nanmin(img_array), np.nanmax(img_array)
+        #     dims = np.shape(img_array)
+        #     # Display interferogram with the appropriate pixel scaling factor.
+        #     self.im = self.axes.imshow(img_array, extent=[0, dims[0] * scaling, 0, dims[1] * scaling])
+        #     self.im.set_clim(vmin, vmax)
+        #     self.cbar = self.fig.colorbar(self.im, ticks=np.linspace(vmin, vmax, 10), format='%.2f')
+        #     self.draw()
 
-# 		# Call superclass constructors
-# 		anim.FuncAnimation.__init__(self, self.figure, self._update_canvas_, fargs=(y,), interval=interval, blit=True)
-# 		return
+		""" Unfinished animation plot code """	
+		# class MyFigureCanvas(FigureCanvas, anim.FuncAnimation):
+		# 	'''
+		# 	This is the FigureCanvas in which the live plot is drawn.
 
-# 	def _update_canvas_(self, y):
-# 		'''
-# 		This function gets called regularly by the timer.
+		# 	'''
+		# 	def __init__(self, parent, id, x_len:int, y_range:list, interval:int) -> None:
+		# 		'''
+		# 		:param x_len:       The nr of data points shown in one plot.
+		# 		:param y_range:     Range on y-axis.
+		# 		:param interval:    Get a new datapoint every .. milliseconds.
 
-# 		'''
-# 		y.append(round(get_next_datapoint(), 2))     # Add new datapoint
-# 		y = y[-self._x_len_:]                        # Truncate list _y_
-# 		self._line_.set_ydata(y)
-# 		return self._line_,
+		# 		'''
+		# 		# Call parent constructor
+		# 		#super().__init__(parent)
+		# 		self.id = id
+		# 		self.dim = [4,4]
+
+
+		# 		FigureCanvas.__init__(self, fig.Figure())
+		# 		# Range settings
+		# 		self._x_len_ = x_len
+		# 		self._y_range_ = y_range
+
+		# 		# Store two lists _x_ and _y_
+		# 		x = list(range(0, x_len))
+		# 		y = [0] * x_len
+
+		# 		# Store a figure and ax
+		# 		self._ax_  = self.figure.subplots()
+		# 		self._ax_.set_ylim(ymin=self._y_range_[0], ymax=self._y_range_[1])
+		# 		self._line_, = self._ax_.plot(x, y)
+
+		# 		# Call superclass constructors
+		# 		anim.FuncAnimation.__init__(self, self.figure, self._update_canvas_, fargs=(y,), interval=interval, blit=True)
+		# 		return
+
+		# 	def _update_canvas_(self, y):
+		# 		'''
+		# 		This function gets called regularly by the timer.
+
+		# 		'''
+		# 		y.append(round(get_next_datapoint(), 2))     # Add new datapoint
+		# 		y = y[-self._x_len_:]                        # Truncate list _y_
+		# 		self._line_.set_ydata(y)
+		# 		return self._line_,
 
 
 class GWENDivies():
