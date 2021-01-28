@@ -435,11 +435,11 @@ class GWENStackPlot(pg.GraphicsLayoutWidget):
 class GWENMatplotlibPlot(QtWidgets.QWidget):
     """ Class to generate and update a matplotlib plot """ 
     """ THIS IS CALLED IN GWENGui_Engine NOT GWENMatplotlibFig """
-    def __init__(self, parent, id, labels, dim):
+    def __init__(self, parent, id, labels, legend, dim):
         super().__init__(parent)
         self.id = id
         self.dim = dim
-        self.matplotlibFig = self.GWENMatplotlibFig(labels)
+        self.matplotlibFig = self.GWENMatplotlibFig(labels, legend)
 
         # Create layout combining axes and toolbar
         toolbar = NavigationToolbar(self.matplotlibFig, parent)
@@ -448,23 +448,39 @@ class GWENMatplotlibPlot(QtWidgets.QWidget):
         layout.addWidget(self.matplotlibFig)
         self.setLayout(layout)
 
-    def updatePlot(self, x, y):
+    def updatePlot(self, x, y, data_labels=None):
+        """
+        @x ---> List or list of lists for x-axis data (or 2D numpy array of x_data)
+        @y ---> List or list of lists for y-axis data
+        @data_labels --> If more than one function is being plotted, supply a list of labels
+        """
         self.matplotlibFig.axes.cla()
-        self.matplotlibFig.axes.plot(x, y)
+
+        # If 'x' is a list of lists (more than one function on plot)
+        if type(x[0]) == list:
+            for curve in range(len(x)):
+                self.matplotlibFig.axes.plot(x[curve], y[curve], label=data_labels[curve])
+                print(x[curve])
+        else:
+            self.matplotlibFig.axes.plot(x, y)
+        try: self.matplotlibFig.legend()
+        except: pass
         self.matplotlibFig.draw()
 
 
     class GWENMatplotlibFig(FigureCanvasQTAgg):
-        """ Child of JPLMatplotlibPlot. This is the plot. 
+        """ Child of GWENMatplotlibPlot. This is the plot. 
             The parent simply adds the toolbar to the widget. """
-        def __init__(self, labels, width=5, height=5, dpi=90):
+        def __init__(self, plot_labels, legend, width=5, height=5, dpi=90):
             self.fig = plt.figure(figsize=(width, height), dpi=dpi)
             self.axes = self.fig.add_subplot(111)
             super().__init__(self.fig)
 
-            self.title = self.fig.suptitle(str(labels[0]))
-            self.xlabel = plt.xlabel(str(labels[1]))
-            self.ylabel = plt.ylabel(str(labels[2]))
+            self.title = self.fig.suptitle(str(plot_labels[0]))
+            self.xlabel = plt.xlabel(str(plot_labels[1]))
+            self.ylabel = plt.ylabel(str(plot_labels[2]))
+            if legend:
+                self.legend = plt.legend()
             self.setFixedSize(400, 360)
 
         """ This probably needs to go outside into parent class """

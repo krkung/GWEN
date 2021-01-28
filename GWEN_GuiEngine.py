@@ -499,9 +499,9 @@ class GWENGui(QtWidgets.QMainWindow):
 		self.labels.append(None)
 
 
-    def addMatplotlibPlot(self, id, labels, dim=[4,4]):
+    def addMatplotlibPlot(self, id, plot_labels=['','x','y'], legend=True, dim=[4,4]):
         """ Adds a matplotlib imshow feature """
-        self.widgets.append(JPLMatplotlibPlot(self.centralWidget, id, labels, dim))
+        self.widgets.append(GWENMatplotlibPlot(self.centralWidget, id, plot_labels, legend, dim))
         # Plots don't get labels
         self.labels.append(None)
 
