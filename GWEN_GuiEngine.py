@@ -24,7 +24,7 @@ import os
 try: 
 	from pydriller import RepositoryMining
 	path = str(os.getcwd())
-	commits = RepositoryMining(path, filepath='GWENGui_Engine.py').traverse_commits()
+	commits = RepositoryMining(path, filepath='GWEN_GuiEngine.py').traverse_commits()
 	commits = [commit.hash for commit in commits]
 	commit_tag = commits[-1]
 
@@ -499,18 +499,26 @@ class GWENGui(QtWidgets.QMainWindow):
 		self.labels.append(None)
 
 
-	def addMatPlot(self, id, x_len=100, y_range=[0,100], interval=20):
-		# 2. Place the matplotlib figure
-		self.widgets.append(MyFigureCanvas(self.centralWidget, id, x_len, y_range, interval))
-		# Plots don't get labels
-		self.labels.append(None)
+    def addMatplotlibPlot(self, id, plot_labels=['','x','y'], legend=True, dim=[4,4]):
+        """ Adds a matplotlib imshow feature """
+        self.widgets.append(GWENMatplotlibPlot(self.centralWidget, id, plot_labels, legend, dim))
+        # Plots don't get labels
+        self.labels.append(None)
+
 
 	################################### Setter Slot Functions ##########################################
 
 	@QtCore.pyqtSlot()
-	def updateIndicator(self, id, output):
+	def updateIndicator(self, id, output, freeze=False):
 		# Searches for Gui Object given an ID
 		indicator = self.getWidget(id)
+		# Allows an indicator to be made uneditable 
+		if freeze:
+			setattr(indicator, 'frozen', True)
+		try: 
+			if indicator.frozen == True:
+				return
+		except: pass
 		# Once found, set the Indicator 
 		indicator.setText(str(output))
 
