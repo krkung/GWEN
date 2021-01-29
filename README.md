@@ -10,9 +10,3 @@ Framework built to rapidly created PyQt5 GUI Applications. Allows for more freed
   - pyqtgraph
   - pyqt_led
 *****************************
-
-
-# Projectile Motion
-Serves as an example of the use of GWEN. It is a physics simulator of a bouncy ball with various adjustable parameters.
-
-- To run: "python Projectile_Motion.py"  
