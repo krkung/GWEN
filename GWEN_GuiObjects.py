@@ -53,7 +53,7 @@ import pyqt_led
 
 class GWENButton(QtWidgets.QPushButton):
 	""" Class used to create a normal Qt push button """
-	def __init__(self, parent, id, callback, dim, label, size=[200,200]):
+	def __init__(self, parent, id, callback, dim, label, size, font):
 		# Call parent constructor
 		super().__init__(label,parent)
 
@@ -70,6 +70,10 @@ class GWENButton(QtWidgets.QPushButton):
 		else:
 			self.enabled = False
 			self.clicked.connect(self.toggle)
+
+		# If provided, change [font <str>, font-size <int>] (ie. ['Arial', 14])
+		if font:
+			self.setFont( QtGui.QFont(font[0], font[1]))
 
 		# Default size
 		self.setFixedWidth(size[0])
@@ -366,7 +370,7 @@ class GWENFileDialog(QtWidgets.QFileDialog):
 		elif type_.upper() == 'OPEN':
 			output_path = self.getOpenFileNames(self,box_title,os.getcwd(),self.filetypes)[0]
 		elif type_.upper() == 'SAVE':
-		 	output_path = self.getSaveFileName(self,box_title,os.getcwd(),self.filetypes,options=self.options)[0]
+			output_path = self.getSaveFileName(self,box_title,os.getcwd(),self.filetypes,options=self.options)[0]
 		return output_path
 
 
@@ -433,72 +437,72 @@ class GWENStackPlot(pg.GraphicsLayoutWidget):
 		pass
 
 class GWENMatplotlibPlot(QtWidgets.QWidget):
-    """ Class to generate and update a matplotlib plot """ 
-    """ THIS IS CALLED IN GWENGui_Engine NOT GWENMatplotlibFig """
-    def __init__(self, parent, id, labels, legend, dim):
-        super().__init__(parent)
-        self.id = id
-        self.dim = dim
-        self.matplotlibFig = self.GWENMatplotlibFig(labels, legend)
+	""" Class to generate and update a matplotlib plot """ 
+	""" THIS IS CALLED IN GWENGui_Engine NOT GWENMatplotlibFig """
+	def __init__(self, parent, id, labels, legend, dim):
+		super().__init__(parent)
+		self.id = id
+		self.dim = dim
+		self.matplotlibFig = self.GWENMatplotlibFig(labels, legend)
 
-        # Create layout combining axes and toolbar
-        toolbar = NavigationToolbar(self.matplotlibFig, parent)
-        layout = QtWidgets.QVBoxLayout()
-        layout.addWidget(toolbar)
-        layout.addWidget(self.matplotlibFig)
-        self.setLayout(layout)
+		# Create layout combining axes and toolbar
+		toolbar = NavigationToolbar(self.matplotlibFig, parent)
+		layout = QtWidgets.QVBoxLayout()
+		layout.addWidget(toolbar)
+		layout.addWidget(self.matplotlibFig)
+		self.setLayout(layout)
 
-    def updatePlot(self, x, y, data_labels=None):
-        """
-        @x ---> List or list of lists for x-axis data (or 2D numpy array of x_data)
-        @y ---> List or list of lists for y-axis data
-        @data_labels --> If more than one function is being plotted, supply a list of labels
-        """
-        self.matplotlibFig.axes.cla()
+	def updatePlot(self, x, y, data_labels=None):
+		"""
+		@x ---> List or list of lists for x-axis data (or 2D numpy array of x_data)
+		@y ---> List or list of lists for y-axis data
+		@data_labels --> If more than one function is being plotted, supply a list of labels
+		"""
+		self.matplotlibFig.axes.cla()
 
-        # If 'x' is a list of lists (more than one function on plot)
-        if type(x[0]) == list:
-            for curve in range(len(x)):
-                self.matplotlibFig.axes.plot(x[curve], y[curve], label=data_labels[curve])
-                print(x[curve])
-        else:
-            self.matplotlibFig.axes.plot(x, y)
-        try: self.matplotlibFig.legend()
-        except: pass
-        self.matplotlibFig.draw()
+		# If 'x' is a list of lists (more than one function on plot)
+		if type(x[0]) == list:
+			for curve in range(len(x)):
+				self.matplotlibFig.axes.plot(x[curve], y[curve], label=data_labels[curve])
+				print(x[curve])
+		else:
+			self.matplotlibFig.axes.plot(x, y)
+		try: self.matplotlibFig.legend()
+		except: pass
+		self.matplotlibFig.draw()
 
 
-    class GWENMatplotlibFig(FigureCanvasQTAgg):
-        """ Child of GWENMatplotlibPlot. This is the plot. 
-            The parent simply adds the toolbar to the widget. """
-        def __init__(self, plot_labels, legend, width=5, height=5, dpi=90):
-            self.fig = plt.figure(figsize=(width, height), dpi=dpi)
-            self.axes = self.fig.add_subplot(111)
-            super().__init__(self.fig)
+	class GWENMatplotlibFig(FigureCanvasQTAgg):
+		""" Child of GWENMatplotlibPlot. This is the plot. 
+			The parent simply adds the toolbar to the widget. """
+		def __init__(self, plot_labels, legend, width=5, height=5, dpi=90):
+			self.fig = plt.figure(figsize=(width, height), dpi=dpi)
+			self.axes = self.fig.add_subplot(111)
+			super().__init__(self.fig)
 
-            self.title = self.fig.suptitle(str(plot_labels[0]))
-            self.xlabel = plt.xlabel(str(plot_labels[1]))
-            self.ylabel = plt.ylabel(str(plot_labels[2]))
-            if legend:
-                self.legend = plt.legend()
-            self.setFixedSize(400, 360)
+			self.title = self.fig.suptitle(str(plot_labels[0]))
+			self.xlabel = plt.xlabel(str(plot_labels[1]))
+			self.ylabel = plt.ylabel(str(plot_labels[2]))
+			if legend:
+				self.legend = plt.legend()
+			self.setFixedSize(400, 360)
 
-        """ This probably needs to go outside into parent class """
-        # def updatePlot_Img(self, img_array, scaling):
-        #     """
-        #     Plot update callback.
-        #     @img_array: (numpy.array) image
-        #     @scaling: (int) pixel scaling factor
-        #     """
-        #     self.axes.cla()
-        #     if self.cbar: self.cbar.remove()
-        #     vmin, vmax = np.nanmin(img_array), np.nanmax(img_array)
-        #     dims = np.shape(img_array)
-        #     # Display interferogram with the appropriate pixel scaling factor.
-        #     self.im = self.axes.imshow(img_array, extent=[0, dims[0] * scaling, 0, dims[1] * scaling])
-        #     self.im.set_clim(vmin, vmax)
-        #     self.cbar = self.fig.colorbar(self.im, ticks=np.linspace(vmin, vmax, 10), format='%.2f')
-        #     self.draw()
+		""" This probably needs to go outside into parent class """
+		# def updatePlot_Img(self, img_array, scaling):
+		#     """
+		#     Plot update callback.
+		#     @img_array: (numpy.array) image
+		#     @scaling: (int) pixel scaling factor
+		#     """
+		#     self.axes.cla()
+		#     if self.cbar: self.cbar.remove()
+		#     vmin, vmax = np.nanmin(img_array), np.nanmax(img_array)
+		#     dims = np.shape(img_array)
+		#     # Display interferogram with the appropriate pixel scaling factor.
+		#     self.im = self.axes.imshow(img_array, extent=[0, dims[0] * scaling, 0, dims[1] * scaling])
+		#     self.im.set_clim(vmin, vmax)
+		#     self.cbar = self.fig.colorbar(self.im, ticks=np.linspace(vmin, vmax, 10), format='%.2f')
+		#     self.draw()
 
 		""" Unfinished animation plot code """	
 		# class MyFigureCanvas(FigureCanvas, anim.FuncAnimation):

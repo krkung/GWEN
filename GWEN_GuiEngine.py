@@ -353,20 +353,20 @@ class GWENGui(QtWidgets.QMainWindow):
 		
 	#################################### Available Widgets ##############################################
 
-	def addButton(self, id, callback, dim=[1,1], label=None, horizontalAlign=False, size=[120,25]):
+	def addButton(self, id, callback, dim=[1,1], label=None, horizontalAlign=False, size=[120,25], font=False):
 		""" Adds a push button to the Gui """
 		if not label: label = id
-		self.widgets.append(GWENButton(self.centralWidget, id, callback, dim, label, size))
+		self.widgets.append(GWENButton(self.centralWidget, id, callback, dim, label, size, font))
 		if horizontalAlign:
 			self.labels.append(GWENLabel(self.centralWidget, ' ', dim))
 		else:
 			self.labels.append(None)
 
 
-	def addToggle(self, id, dim=[1,1], label=None, size=[120,20]):
+	def addToggle(self, id, dim=[1,1], label=None, size=[120,20], font=False):
 		""" Adds a toggle switch to the Gui """
 		if not label: label = id
-		self.widgets.append(GWENButton(self.centralWidget, id, None, dim, label, size))
+		self.widgets.append(GWENButton(self.centralWidget, id, None, dim, label, size, font))
 		# Toggles don't get labels
 		self.labels.append(None)
 
@@ -499,11 +499,11 @@ class GWENGui(QtWidgets.QMainWindow):
 		self.labels.append(None)
 
 
-    def addMatplotlibPlot(self, id, plot_labels=['','x','y'], legend=True, dim=[4,4]):
-        """ Adds a matplotlib imshow feature """
-        self.widgets.append(GWENMatplotlibPlot(self.centralWidget, id, plot_labels, legend, dim))
-        # Plots don't get labels
-        self.labels.append(None)
+	def addMatplotlibPlot(self, id, plot_labels=['','x','y'], legend=True, dim=[4,4]):
+		""" Adds a matplotlib imshow feature """
+		self.widgets.append(GWENMatplotlibPlot(self.centralWidget, id, plot_labels, legend, dim))
+		# Plots don't get labels
+		self.labels.append(None)
 
 
 	################################### Setter Slot Functions ##########################################
@@ -597,21 +597,6 @@ class GWENGui(QtWidgets.QMainWindow):
 		try: return str(widget.value())
 		except ValueError:
 			print('')
-
-
-	# @QtCore.pyqtSlot()
-	# def getVal(self, id):
-	# 	""" Returns any type """
-	# 	widget = self.getWidget(id)
-
-	# 	if isinstance(widget.value,str):
-	# 		return widget.value()
-	# 	elif isinstance(widget.value,int):
-	# 		return widget.value()
-	# 	elif isinstance(widget.value,bool):
-	# 		return widget.value()
-	# 	elif isinstance(widget.value,float):
-	# 		return widget.value()
 	
 
 	def getWidget(self, id):
@@ -629,6 +614,13 @@ class GWENGui(QtWidgets.QMainWindow):
 					return label
 		else:
 			pass
+
+
+	def getSender(self):
+		""" Add this function into a callback function for a button/toggle
+			to return the id or label of the widget clicked """
+		sender_widget = self.sender()
+		return sender_widget.id
 
 	########################################## "Divies" Functions ##################################################
 
